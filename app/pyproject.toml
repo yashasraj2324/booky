@@ -21,4 +21,11 @@ dependencies = [
     "rapidocr-onnxruntime>=1.4.4",
     "openai>=3.7.0",
     "unstructured[docx,pdf]>=0.27.5",
+    "langchain>=0.3.0",
+    "langchain-core>=0.3.0",
+    "langchain-text-splitters>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "langchain-community>=0.3.0",
+    "azure-search-documents>=11.5.2",
+    "requests>=2.31.0",
 ]

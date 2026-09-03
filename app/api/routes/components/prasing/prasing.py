@@ -50,6 +50,8 @@ from unstructured.chunking.title import chunk_by_title
 from unstructured.documents.elements import Element, Image, Table
 from unstructured.partition.auto import partition
 
+from app.api.routes.components.indexing import index_chunks_to_azure
+
 logger = logging.getLogger(__name__)
 
 
@@ -573,7 +575,7 @@ def write_outputs(chunks: list[Chunk], issues: list[ProcessingIssue], output_pre
     print(f"Wrote manifest              -> {manifest_path}")
 
 
-async def run(file_path: str, output_dir: str) -> None:
+async def run(file_path: str, output_dir: str, dry_run: bool = False) -> None:
     os.makedirs(output_dir, exist_ok=True)
     source_doc_id = os.path.splitext(os.path.basename(file_path))[0]
 
@@ -591,14 +593,36 @@ async def run(file_path: str, output_dir: str) -> None:
     chunks = await parser.parse(file_path, source_doc_id)
     write_outputs(chunks, parser.issues, os.path.join(output_dir, source_doc_id))
 
+    # ── Azure embedding & indexing ─────────────────────────────────────
+    # Skip gracefully if Azure env vars are not set — the existing
+    # pipeline still produces JSONL output without Azure configured.
+    if not os.getenv("AZURE_OPENAI_ENDPOINT"):
+        logger.warning(
+            "Azure not configured — skipping embedding & indexing. "
+            "Set AZURE_OPENAI_ENDPOINT and related env vars to enable."
+        )
+    else:
+        logger.info("Starting Azure embedding & indexing...")
+        result = await index_chunks_to_azure(chunks, dry_run=dry_run)
+        if dry_run:
+            logger.info("Dry run result: %s", result)
+        else:
+            logger.info(
+                "Azure indexing complete: %d/%d documents uploaded "
+                "(text_vectors=%d, image_vectors=%d)",
+                result["uploaded"], result["total_documents"],
+                result["text_vectors"], result["image_vectors"],
+            )
+
 
 if __name__ == "__main__":
     import sys
 
     logging.basicConfig(level=logging.INFO)
 
-    if len(sys.argv) != 3:
-        print("Usage: python multimodal_parsing_pipeline.py <input_file> <output_dir>")
+    if len(sys.argv) < 3:
+        print("Usage: python prasing.py <input_file> <output_dir> [--dry-run]")
         sys.exit(1)
 
-    asyncio.run(run(sys.argv[1], sys.argv[2]))
+    dry_run = "--dry-run" in sys.argv
+    asyncio.run(run(sys.argv[1], sys.argv[2], dry_run=dry_run))
