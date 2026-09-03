@@ -1,0 +1,1309 @@
+[
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "BIVIARIATE DATA AND MULTIVARIATE DATA "
+  },
+  {
+    "type": "text",
+    "content": "Bivariate data involves two variables."
+  },
+  {
+    "type": "text",
+    "content": "goal of bivariate analysis is to explore the relationship between variables."
+  },
+  {
+    "type": "text",
+    "content": "This relationship can help in "
+  },
+  {
+    "type": "text",
+    "content": "comparisons,"
+  },
+  {
+    "type": "text",
+    "content": "identifying causes,"
+  },
+  {
+    "type": "text",
+    "content": "further exploration of the data."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Table 2.3, with data of the temperature in a shop and sales of sweaters. \u2022 Bivariate Data involves two variables. \u2022 Bivariate data deals with causes of relationships.  \u2022 The aim is to find relationships among data."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "A scatter plot is a useful  graphical method for visualizing  bivariate data."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "The key features of a scatter plot are: "
+  },
+  {
+    "type": "text",
+    "content": "Strength: Indicates how closely the data points fit a pattern  or trend."
+  },
+  {
+    "type": "text",
+    "content": "Shape: Helps in identifying the type of relationship (linear,  quadratic, etc.)."
+  },
+  {
+    "type": "text",
+    "content": "Direction: Shows whether the relationship is positive,  negative, or neutral."
+  },
+  {
+    "type": "text",
+    "content": "Outliers: Helps identify any points that deviate significantly   from the trend."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "There are various statistical measures to describe the  relationship between two variables. "
+  },
+  {
+    "type": "text",
+    "content": "Two important bivariate statistics are  "
+  },
+  {
+    "type": "text",
+    "content": "1. Covariance "
+  },
+  {
+    "type": "text",
+    "content": "2. Correlation. "
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Covariance "
+  },
+  {
+    "type": "text",
+    "content": "Covariance measures the joint variability of two random  variables."
+  },
+  {
+    "type": "text",
+    "content": "It tells you whether an increase in one variable results  in an increase or decrease in the other variable."
+  },
+  {
+    "type": "text",
+    "content": "Mathematically, the covariance between two variables X  and Y is defined as:"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "The formula for the covariance between two datasets  X and Y is: "
+  },
+  {
+    "type": "text",
+    "content": "where: "
+  },
+  {
+    "type": "text",
+    "content": "X and y are individual data points from sets X and Y. \u2022 E(X)and E(Y) are the means of X and Y, respectively. \u2022 N is the number of data points."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "Covariance values: "
+  },
+  {
+    "type": "text",
+    "content": " Positive covariance: As one variable increases, the other  variable also increases. "
+  },
+  {
+    "type": "text",
+    "content": "Negative covariance: As one variable increases,the other  variable decreases. "
+  },
+  {
+    "type": "text",
+    "content": "Zero covariance: No linear relationship between the variables."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Correlation "
+  },
+  {
+    "type": "text",
+    "content": "covariance measures the direction of the relationship."
+  },
+  {
+    "type": "text",
+    "content": "correlation quantifies the strength of the relationship  between two variables."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "The most common measure of correlation is the Pearson  correlation coefficient."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Find the correlation coefficient of data  X={1,2,3,4,5} AND Y={1,4,9,16,25} The mean value of "
+  },
+  {
+    "type": "text",
+    "content": " X =15/5=3 "
+  },
+  {
+    "type": "text",
+    "content": " Y =55/5=11 "
+  },
+  {
+    "type": "text",
+    "content": "Standard deviation of "
+  },
+  {
+    "type": "text",
+    "content": "X =1.41 "
+  },
+  {
+    "type": "text",
+    "content": "Y = 8.6486"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Multivariate Statistics "
+  },
+  {
+    "type": "text",
+    "content": "Multivariate data refers to data that involves more than two  variables. "
+  },
+  {
+    "type": "text",
+    "content": "Machine learning, most datasets are multivariate. \u2022 The goal of multivariate analysis is to understand  relationships among multiple variables simultaneously."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "mean and variance for each attribute column are: Attribute 1: Mean = 2.00, Variance = 0.67 Attribute 2: Mean = 5.00, Variance = 0.67 Attribute 3: Mean = 1.33, Variance = 0.22 "
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "The mean vector is used to represent the mean of multiple  variables. "
+  },
+  {
+    "type": "text",
+    "content": "the covariance matrix represents the variance and  relationships among all variables. "
+  },
+  {
+    "type": "text",
+    "content": "The mean vector is also known as the centroid. "
+  },
+  {
+    "type": "text",
+    "content": "The covariance matrix is also referred to as the dispersion  matrix."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Multivariate analysis techniques include: "
+  },
+  {
+    "type": "text",
+    "content": "1. Regression Analysis "
+  },
+  {
+    "type": "text",
+    "content": "2. Principal Component Analysis (PCA) 3. Path Analysis"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Heatmap "
+  },
+  {
+    "type": "text",
+    "content": "graphical representation of a 2D matrix  \u2022 Takes matrix as input and colors it."
+  },
+  {
+    "type": "text",
+    "content": "values are represented by colors."
+  },
+  {
+    "type": "text",
+    "content": "The darker color indicate larger value"
+  },
+  {
+    "type": "text",
+    "content": "The lighter color indicate smaller value."
+  },
+  {
+    "type": "text",
+    "content": "Advantage : "
+  },
+  {
+    "type": "text",
+    "content": "Human perceive color well"
+  },
+  {
+    "type": "text",
+    "content": "By color shaping larger values can be perceived well."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Example:  "
+  },
+  {
+    "type": "text",
+    "content": "Action heat map in football"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Patient data highlighting weight count"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Applications: "
+  },
+  {
+    "type": "text",
+    "content": " Heatmaps are useful for visualizing complex data like  \u2022 traffic patterns "
+  },
+  {
+    "type": "text",
+    "content": "patient health data,"
+  },
+  {
+    "type": "text",
+    "content": " where you can easily identify regions of higher or lower values. "
+  },
+  {
+    "type": "text",
+    "content": "Example: "
+  },
+  {
+    "type": "text",
+    "content": "In vehicle traffic data, regions with heavy traffic are highlighted  with dark colors, making it easy to spot problem areas."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Pairplot (or Scatter Matrix) "
+  },
+  {
+    "type": "text",
+    "content": "A pairplot (or scatter matrix) is a matrix of scatter plots that  shows relationships between every pair of variables in a  multivariate dataset."
+  },
+  {
+    "type": "text",
+    "content": "This method allows you to visually examine correlations or  relationships between variables."
+  },
+  {
+    "type": "text",
+    "content": "A random matrix of three columns is chosen and the  relationships of the columns is plotted as a pairplot (or  scattermatrix)"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Visual Layout: Each  "
+  },
+  {
+    "type": "text",
+    "content": "scatter plot in the  "
+  },
+  {
+    "type": "text",
+    "content": "matrix shows the  "
+  },
+  {
+    "type": "text",
+    "content": "relationship  "
+  },
+  {
+    "type": "text",
+    "content": "between two  "
+  },
+  {
+    "type": "text",
+    "content": "variables. "
+  },
+  {
+    "type": "text",
+    "content": "Usefulness: By examining the pairplot, you can easily identify  patterns, correlations,or clusters among the variables."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Essential Mathematics for Multivariate Data "
+  },
+  {
+    "type": "text",
+    "content": "These include concepts from  "
+  },
+  {
+    "type": "text",
+    "content": "1. Linear Algebra, "
+  },
+  {
+    "type": "text",
+    "content": "2. Statistics, "
+  },
+  {
+    "type": "text",
+    "content": "3. Probability, "
+  },
+  {
+    "type": "text",
+    "content": "4. Optimization."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Linear Algebra "
+  },
+  {
+    "type": "text",
+    "content": "Linear algebra is crucial in machine learning as it provides the  tools for dealing with data in the form of vectors and matrices.  Here's a breakdown of important topics: "
+  },
+  {
+    "type": "text",
+    "content": "Vectors: A vector is an ordered list of numbers. It can  represent data points or features of an observation in a  multivariate dataset."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Dot product and cross product are used to compute  projections and angles between vectors. "
+  },
+  {
+    "type": "text",
+    "content": "Matrices: A matrix is a 2D array of numbers. In machine  learning, matrices often represent data where rows are  instances and columns are features."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Determinants and Inverses: "
+  },
+  {
+    "type": "text",
+    "content": "The determinant of a matrix tells us if the matrix is  invertible (non-singular)."
+  },
+  {
+    "type": "text",
+    "content": "The inverse of a matrix is used to solve linear systems of  equations."
+  },
+  {
+    "type": "text",
+    "content": "Singular Value Decomposition (SVD): "
+  },
+  {
+    "type": "text",
+    "content": " This is a factorization method used in PCA and other  dimensionality reduction techniques to decompose a matrix  into singular values and vectors."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Statistics "
+  },
+  {
+    "type": "text",
+    "content": "Statistics is key to understanding the relationships  between different variables in multivariate data. Key  concepts include: "
+  },
+  {
+    "type": "text",
+    "content": "Mean and Variance: Measures of central tendency  (mean) and spread (variance) are essential to  understanding the distribution of each variable. "
+  },
+  {
+    "type": "text",
+    "content": "Covariance: Covariance measures the relationship  between two variables. A positive covariance indicates  that as one variable increases, the other tends to increase."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Correlation: Correlation is a normalized measure of  covariance that indicates the strength and direction of the  relationship between two variables. "
+  },
+  {
+    "type": "text",
+    "content": "Multivariate Normal Distribution: Many machine learning  algorithms assume that the data follows a multivariate normal  distribution, which extends the idea of normal distribution to  more than one variable. "
+  },
+  {
+    "type": "text",
+    "content": "Principal Component Analysis (PCA): PCA is used to reduce  the dimensionality of the dataset while retaining as much  variance as possible. It uses eigenvectors and eigenvalues to  identify the principal components."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Probability "
+  },
+  {
+    "type": "text",
+    "content": "Probability theory underpins the concept of uncertainty, which  is inherent in real-world data: "
+  },
+  {
+    "type": "text",
+    "content": "Random Variables: "
+  },
+  {
+    "type": "text",
+    "content": " A random variable represents a quantity whose value is subject  to chance. In multivariate data, we deal with vectors of random  variables. "
+  },
+  {
+    "type": "text",
+    "content": "Probability Distributions:  "
+  },
+  {
+    "type": "text",
+    "content": "These describe the likelihood of various outcomes. Common  distributions in machine learning include the normal distribution  and the multinomial distribution."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Optimization "
+  },
+  {
+    "type": "text",
+    "content": "Optimization is key to finding the best model for multivariate  data. Many machine learning algorithms are formulated as  optimization problems. "
+  },
+  {
+    "type": "text",
+    "content": "Gradient Descent: An iterative optimization algorithm used to  minimize a cost function (such as in linear regression or neural  networks)."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Convex Optimization:  "
+  },
+  {
+    "type": "text",
+    "content": "Involves minimizing convex functions, and plays a significant  role in machine learning, as many cost functions are convex. Lagrange Multipliers:  "
+  },
+  {
+    "type": "text",
+    "content": "Used for optimizing functions subject to constraints, which is  often seen in constrained optimization problems in machine  learning."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Multivariate Analysis "
+  },
+  {
+    "type": "text",
+    "content": "Multivariate Regression: This is the extension of linear  regression to predict multiple dependent variables using a set  of independent variables. "
+  },
+  {
+    "type": "text",
+    "content": "Multivariate Analysis of Variance (MANOVA): An extension of ANOVA used when there are two or more  dependent variables. It tests for differences between groups. "
+  },
+  {
+    "type": "text",
+    "content": "Factor Analysis: "
+  },
+  {
+    "type": "text",
+    "content": "A method for identifying the underlying relationships between  observed variables. It\u2019s often used in exploratory data  analysis."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Linear Systems and Gaussian Elimination for Multivariate  Data "
+  },
+  {
+    "type": "text",
+    "content": "A linear system of equations is a group of equations with  unknown variables. "
+  },
+  {
+    "type": "text",
+    "content": "Let Ax=y then the solution x is given as: "
+  },
+  {
+    "type": "text",
+    "content": "x = y/A = A-1y "
+  },
+  {
+    "type": "text",
+    "content": "If there is a unique solution, then the system is called consistent  independent.  "
+  },
+  {
+    "type": "text",
+    "content": "If there are various solutions, then the system is called  consistent dependent. "
+  },
+  {
+    "type": "text",
+    "content": "If there are no solutions and the equations are contradictory,  then the system is called inconsistent."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "For solving large number of system of equations, Gaussian  elimination can be used.  "
+  },
+  {
+    "type": "text",
+    "content": "The procedure for applying Gaussian elimination is given as  follows: "
+  },
+  {
+    "type": "text",
+    "content": "1. Write the given matrix. "
+  },
+  {
+    "type": "text",
+    "content": "2. Append vector y to the matrix A. This matrix is called  augmentation matrix. "
+  },
+  {
+    "type": "text",
+    "content": "3. Keep the element a11 as pivot and eliminate all a11 in  second row using the matrix operation,"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "To facilitate the application of Gaussian elimination method  the following row operations are applied "
+  },
+  {
+    "type": "text",
+    "content": "applied: "
+  },
+  {
+    "type": "text",
+    "content": "1.Swapping the rows "
+  },
+  {
+    "type": "text",
+    "content": "2.Multiplying or dividing row by a constant "
+  },
+  {
+    "type": "text",
+    "content": "2.Replacing the row by adding or subtracting a multiplayer of  another row to it."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Echelon Form "
+  },
+  {
+    "type": "text",
+    "content": "https://youtu.be/zksRGHYD76g?si=TTJbnmYQMUPfCUex"
+  },
+  {
+    "type": "text",
+    "content": "Echelon form means that the matrix is in one of two states: "
+  },
+  {
+    "type": "text",
+    "content": "1. Row echelon form. "
+  },
+  {
+    "type": "text",
+    "content": "2. Reduced row echelon form. "
+  },
+  {
+    "type": "text",
+    "content": "This means that the matrix meets the following three  requirements: "
+  },
+  {
+    "type": "text",
+    "content": "1. The first number in the row (called a leading coefficient) is 1.  2. Every leading 1 is to the right of the one above it. 3. Any non-zero rows are always above rows with all zeros. "
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "Are the following in echelon form"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Are the following in echelon form"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "Reduced row echelon form "
+  },
+  {
+    "type": "text",
+    "content": "Only if it is in row echelon form  "
+  },
+  {
+    "type": "text",
+    "content": "All its pivots are equal to 1"
+  },
+  {
+    "type": "text",
+    "content": "The pivots are the only non-zero entries of the basic columns."
+  },
+  {
+    "type": "text",
+    "content": " It has one zero row (the third)which is below the non-zero rows.   The first and the second row are non-zero, but have a pivot   (A11 and A23 respectively).  "
+  },
+  {
+    "type": "text",
+    "content": " The two pivots are equal to 1 and they are the only non-zero   entries in their respective columns."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "Step 4: Extract the solutions"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "LU decomposition "
+  },
+  {
+    "type": "text",
+    "content": "Also known as LU factorization."
+  },
+  {
+    "type": "text",
+    "content": "It\u2019s a method in linear algebra."
+  },
+  {
+    "type": "text",
+    "content": "Decomposes a square matrix into the product of a lower  triangular matrix (L) and an upper triangular matrix (U)."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602"
+  },
+  {
+    "type": "text",
+    "content": "Machine learning &importance of Probability and statics "
+  },
+  {
+    "type": "text",
+    "content": "Probability theory underpins the concept of uncertainty,  which is inherent in real-world data: "
+  },
+  {
+    "type": "text",
+    "content": "Random Variables: Represents a quantity whose value is  subject to chance. "
+  },
+  {
+    "type": "text",
+    "content": "In multivariate data, we deal with vectors of random variables."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Probability Distributions: "
+  },
+  {
+    "type": "text",
+    "content": " These describe the likelihood of various outcomes. Common distributions in machine learning include the 1.Normal distribution "
+  },
+  {
+    "type": "text",
+    "content": "2.The multinomial distribution."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Discrete probability distribution "
+  },
+  {
+    "type": "text",
+    "content": "A probability distribution that gives the finite trials of a discrete  random variable at a given point in time is called a discrete  probability distribution. "
+  },
+  {
+    "type": "text",
+    "content": "Conditions for the discrete probability distribution are: Probability of a discrete random variable lies between 0 and 1: 0  \u2264 P (X = x) \u2264 1 "
+  },
+  {
+    "type": "text",
+    "content": "Sum of Probabilities is always equal to 1: \u2211 P (X =x) = 1"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Let two coins be tossed then the probability of getting a tail is  an example of a discrete probability distribution.  The sample space for the given event is {HH, HT, TH, TT} and  X be the number of tails then, the discrete probability  distribution table is given by: "
+  },
+  {
+    "type": "text",
+    "content": "x 0 {HH} 1 {HT, TH} 2 {TT}"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Continuous probability distributions (CPDs)  Are probability distributions that apply to continuous random  variables.  "
+  },
+  {
+    "type": "text",
+    "content": "It describes events that can take on any value within a specific  range,  "
+  },
+  {
+    "type": "text",
+    "content": "Example: "
+  },
+  {
+    "type": "text",
+    "content": "The height of a person"
+  },
+  {
+    "type": "text",
+    "content": "The amount of time it takes to complete a task."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Example :A model to predict the price of a car.  You have data on various factors like mileage, year, and  brand. But how do you account for the fact that prices can  vary continuously? "
+  },
+  {
+    "type": "text",
+    "content": " This is where continuous distributions come to the rescue!  By fitting a suitable distribution to the price data, you can  estimate the probability of a car with specific features  falling within a certain price range."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Density Estimation  "
+  },
+  {
+    "type": "text",
+    "content": "Probability Density Function (PDF) tells us how likely  different outcomes are for a continuous variable. "
+  },
+  {
+    "type": "text",
+    "content": "Maximum Likelihood Estimation helps us find the  best-fitting model for the data we observe. "
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Density Estimation? "
+  },
+  {
+    "type": "text",
+    "content": "Density estimation aims to find the probability distribution (or  density) of a dataset, allowing us to understand how likely  different values are.  "
+  },
+  {
+    "type": "text",
+    "content": "It's an unsupervised learning technique(doesn't require labeled  data).  "
+  },
+  {
+    "type": "text",
+    "content": "Common techniques include: "
+  },
+  {
+    "type": "text",
+    "content": "Histograms: A basic method for visualizing data distribution  by grouping data into bins.  "
+  },
+  {
+    "type": "text",
+    "content": "Kernel Density Estimation (KDE): A more flexible method  that uses a \"kernel\" function to estimate the density, smoothing  out the data.  "
+  },
+  {
+    "type": "text",
+    "content": "Mixture Models: Assumes the data is generated from a  P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "combination of simler distributions. "
+  },
+  {
+    "type": "text",
+    "content": "Parametric Density Estimation is a statistical approach used  to estimate the probability density function (PDF) of a dataset  by assuming that the data follows a known distribution with a  finite set of parameters. "
+  },
+  {
+    "type": "text",
+    "content": "Non-Parametric Density Estimation is a method used to  estimate the probability density function (PDF) of a dataset  without assuming an underlying parametric distribution. "
+  },
+  {
+    "type": "text",
+    "content": "Instead of defining a fixed set of parameters, these methods let  the data determine the shape of the distribution."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "FEATURE ENGINEER\u00cfNG AND DIMENSIONALITY   REDUCTION TECHNIQUES "
+  },
+  {
+    "type": "text",
+    "content": "Features are attributes.  "
+  },
+  {
+    "type": "text",
+    "content": "Feature engineering is about determining the subset of  features that form important part of the input that improves the  performance of the model, be it classification or any other model  in machine learning."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Feature engineering deals with two problems  "
+  },
+  {
+    "type": "text",
+    "content": "1. Feature Transformation "
+  },
+  {
+    "type": "text",
+    "content": "2. Feature Selection. "
+  },
+  {
+    "type": "text",
+    "content": "Feature transformation :  "
+  },
+  {
+    "type": "text",
+    "content": "Extraction of features and creating new features that may be  helpful in increasing performance.  "
+  },
+  {
+    "type": "text",
+    "content": "Eg:The height and weight may give a new attribute called Body  Mass \u00cdndex (BMI)."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Feature subset  "
+  },
+  {
+    "type": "text",
+    "content": "It reduces the dataset size by removing irrelevant features  and constructs minimum set of attributes for machine  learning."
+  },
+  {
+    "type": "text",
+    "content": "Focuses on selection of features to reduce the time but not at  the cost of Reliability."
+  },
+  {
+    "type": "text",
+    "content": "Components that do not contribute much can be deleted. \u2022 If the dataset has n attributes, then time complexity is  extremely high as n dimensions need to be processed for the  given dataset."
+  },
+  {
+    "type": "text",
+    "content": "For n attributes there are there are 2n possible subsets"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "The features can be removed based on two aspects: 1.Feature relevancy  "
+  },
+  {
+    "type": "text",
+    "content": "Some features contribute more for classification than other  features."
+  },
+  {
+    "type": "text",
+    "content": "For example, a mole on the face can help in face detection  than common features like nose."
+  },
+  {
+    "type": "text",
+    "content": "In simple words, the features should be relevant"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "2.Feature redundancy \u2013 "
+  },
+  {
+    "type": "text",
+    "content": "Some features are redundant."
+  },
+  {
+    "type": "text",
+    "content": "Eg: when a database table has a field called Date of  birth, then age field is not relevant as age can be  computed easily from date of birth.  "
+  },
+  {
+    "type": "text",
+    "content": "It helps in removing the column age that leads to  reduction of dimension one."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Wrapper-based methods use classifiers to identify the best  features."
+  },
+  {
+    "type": "text",
+    "content": "These are selected and evaluated by the learning  algorithms."
+  },
+  {
+    "type": "text",
+    "content": "Some of the important algorithms that fall under this category. 1. Stepwise Forward Selection "
+  },
+  {
+    "type": "text",
+    "content": "2. Stepwise Backward Elimination "
+  },
+  {
+    "type": "text",
+    "content": "3. Principal Component Analysis"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Stepwise Forward Selection "
+  },
+  {
+    "type": "text",
+    "content": "Is a feature selection technique"
+  },
+  {
+    "type": "text",
+    "content": "Start with an empty model"
+  },
+  {
+    "type": "text",
+    "content": "Iteratively add the most significant variables until no further  improvement in model performance is observed."
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "text",
+    "content": "Example : "
+  },
+  {
+    "type": "text",
+    "content": "A company wants to predict whether an employee will leave the  organization based on various factors such as  "
+  },
+  {
+    "type": "text",
+    "content": "Age"
+  },
+  {
+    "type": "text",
+    "content": "Salary"
+  },
+  {
+    "type": "text",
+    "content": "Work Experience"
+  },
+  {
+    "type": "text",
+    "content": "Job Satisfaction"
+  },
+  {
+    "type": "text",
+    "content": "Commute Time"
+  },
+  {
+    "type": "text",
+    "content": "Number of Promotions"
+  },
+  {
+    "type": "text",
+    "content": "Training Hours"
+  },
+  {
+    "type": "text",
+    "content": "P.Ramkumar_ BAI602 "
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image54.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image62.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image56.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image60.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image59.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image52.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image58.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image63.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image50.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image49.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image55.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image61.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image57.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image53.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  },
+  {
+    "type": "image_description",
+    "filename": "word/media/image51.png",
+    "content": "Image present but no OpenAI client configured for description (missing API key)."
+  }
+]

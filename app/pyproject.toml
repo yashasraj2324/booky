@@ -1,0 +1,24 @@
+[project]
+name = "app"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.141.1",
+    "logfire[fastapi]>=4.41.0",
+    "motor>=3.7.1",
+    "opentelemetry-distro>=0.65b0",
+    "opentelemetry-exporter-otlp>=1.44.0",
+    "passlib[bcrypt]>=1.7.4",
+    "pydantic[email]>=2.13.5",
+    "pydantic-settings>=2.15.0",
+    "pyjwt>=2.13.0",
+    "pymongo>=4.17.0",
+    "python-jose>=3.5.0",
+    "pymupdf4llm>=1.28.2",
+    "markitdown[docx]>=0.1.7",
+    "rapidocr-onnxruntime>=1.4.4",
+    "openai>=3.7.0",
+    "unstructured[docx,pdf]>=0.27.5",
+]
