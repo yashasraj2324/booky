@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from app.api.schemas.source import SourceCreate, SourceResponse
 from app.database.mongodb import sources_collection
 from datetime import datetime, timezone
+import logging
 
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, status, UploadFile, File, Depends
@@ -141,7 +142,59 @@ async def upload_source(
     # 5. Save source
     result = await sources_collection.insert_one(source)
 
-    # 6. Return API response
+    # 6. Auto-parse: download from GridFS and run the parsing pipeline
+    import asyncio
+    import os
+    import tempfile
+
+    logger = logging.getLogger(__name__)
+
+    async def _parse_in_background():
+        """Background task: download file from GridFS → parse → index."""
+        try:
+            # Update status
+            await sources_collection.update_one(
+                {"_id": result.inserted_id},
+                {"$set": {"status": "processing"}}
+            )
+
+            # Download from GridFS to a temp file
+            from app.database.mongodb import fs
+            import io
+
+            tmp_dir = tempfile.mkdtemp()
+            tmp_path = os.path.join(tmp_dir, file.filename or "document")
+
+            buf = io.BytesIO()
+            await fs.download_to_stream(file_id, buf)
+            with open(tmp_path, "wb") as f:
+                f.write(buf.getvalue())
+
+            # Run the parsing + indexing pipeline
+            from app.api.routes.components.prasing.prasing import run as parse_run
+            await parse_run(
+                file_path=tmp_path,
+                output_dir=tmp_dir,
+                notebook_id=notebook_id,
+            )
+
+            # Update status to ready
+            await sources_collection.update_one(
+                {"_id": result.inserted_id},
+                {"$set": {"status": "ready"}}
+            )
+            logger.info("Auto-parse complete for source: %s", result.inserted_id)
+
+        except Exception as e:
+            logger.error("Auto-parse failed for source %s: %s", result.inserted_id, e)
+            await sources_collection.update_one(
+                {"_id": result.inserted_id},
+                {"$set": {"status": "failed", "error": str(e)}}
+            )
+
+    asyncio.create_task(_parse_in_background())
+
+    # 7. Return API response
     return SourceResponse(
         id=str(result.inserted_id),
         notebook_id=notebook_id,

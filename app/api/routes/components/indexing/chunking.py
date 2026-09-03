@@ -35,6 +35,7 @@ def chunk_to_document(chunk: Any) -> Document:
 
     meta["chunk_id"] = getattr(chunk, "chunk_id", "")
     meta["source_doc_id"] = getattr(chunk, "source_doc_id", "")
+    meta["notebook_id"] = raw_meta.get("notebook_id", "")
     meta["page_number"] = getattr(chunk, "page_number", 0) or 0
     meta["modality"] = getattr(chunk, "modality", "text")
     meta["element_type"] = raw_meta.get("element_type", "Text")

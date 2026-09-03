@@ -1,4 +1,4 @@
-"""Configuration for Azure OpenAI, OpenRouter, and Azure AI Search."""
+"""Configuration for Azure OpenAI (embeddings + LLM), OpenRouter, NVIDIA NIM reranker, and Azure AI Search."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ class IndexingSettings(BaseSettings):
         case_sensitive=False,
     )
 
-    # ── Azure OpenAI (text embeddings) ───────────────────────────────
+    # ── Azure OpenAI (text embeddings + chat LLM) ─────────────────────
     azure_openai_endpoint: str = Field(
         ..., description="AOAI resource endpoint"
     )
@@ -36,6 +36,13 @@ class IndexingSettings(BaseSettings):
     )
     azure_openai_embedding_deployment: str = Field(
         ..., description="Deployment name for text-embedding-3-large"
+    )
+    azure_openai_chat_deployment: str = Field(
+        ..., description="Deployment name for GPT-4o (chat completions)"
+    )
+    azure_openai_chat_temperature: float = Field(
+        default=0.3,
+        description="Temperature for grounded answers (low = factual)",
     )
 
     # ── OpenRouter (multimodal image embeddings) ─────────────────────
@@ -60,6 +67,21 @@ class IndexingSettings(BaseSettings):
         default="booky-documents",
     )
 
+    # ── NVIDIA NIM (reranking) ────────────────────────────────────────
+    nvidia_api_key: SecretStr = Field(
+        ..., description="NVIDIA API key (nvapi-...) for reranking NIM"
+    )
+    nvidia_rerank_base_url: str = Field(
+        default="https://integrate.api.nvidia.com/v1",
+    )
+    nvidia_rerank_model: str = Field(
+        default="nvidia/nv-rerankqa-mistral-4b-v3",
+    )
+    rerank_top_n: int = Field(
+        default=5,
+        description="Number of top documents to keep after reranking",
+    )
+
     # ── Tunables ─────────────────────────────────────────────────────
     chunk_size: int = Field(default=1000)
     chunk_overlap: int = Field(default=200)
@@ -75,6 +97,10 @@ class IndexingSettings(BaseSettings):
     @property
     def openrouter_api_key_str(self) -> str:
         return self.openrouter_api_key.get_secret_value()
+
+    @property
+    def nvidia_api_key_str(self) -> str:
+        return self.nvidia_api_key.get_secret_value()
 
     @property
     def search_admin_key_str(self) -> str:

@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.notebook import router as notebook_router
 from app.api.routes.source import router as source_router
 from app.api.routes.user import router as user_router
+from app.api.routes.chat import router as chat_router
 
 
 app = FastAPI(
@@ -36,3 +37,5 @@ app.include_router(
 )
 
 app.include_router(source_router)
+
+app.include_router(chat_router)

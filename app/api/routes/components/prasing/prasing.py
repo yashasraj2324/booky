@@ -575,7 +575,12 @@ def write_outputs(chunks: list[Chunk], issues: list[ProcessingIssue], output_pre
     print(f"Wrote manifest              -> {manifest_path}")
 
 
-async def run(file_path: str, output_dir: str, dry_run: bool = False) -> None:
+async def run(
+    file_path: str,
+    output_dir: str,
+    notebook_id: str = "",
+    dry_run: bool = False,
+) -> None:
     os.makedirs(output_dir, exist_ok=True)
     source_doc_id = os.path.splitext(os.path.basename(file_path))[0]
 
@@ -603,7 +608,7 @@ async def run(file_path: str, output_dir: str, dry_run: bool = False) -> None:
         )
     else:
         logger.info("Starting Azure embedding & indexing...")
-        result = await index_chunks_to_azure(chunks, dry_run=dry_run)
+        result = await index_chunks_to_azure(chunks, notebook_id=notebook_id, dry_run=dry_run)
         if dry_run:
             logger.info("Dry run result: %s", result)
         else:

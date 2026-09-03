@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 async def index_chunks_to_azure(
     chunks: Sequence[Any],
     *,
+    notebook_id: str = "",
     dry_run: bool = False,
     text_embedder=None,
     image_embedder: OpenRouterImageEmbedder | None = None,
@@ -32,6 +33,9 @@ async def index_chunks_to_azure(
     ----------
     chunks
         Iterable of ``Chunk`` objects from ``prasing.py``.
+    notebook_id
+        MongoDB ObjectId of the notebook these chunks belong to.
+        Stored in Azure Search so retrieval can filter by notebook.
     dry_run
         Build chunks and embeddings but skip the index upload.
     text_embedder / image_embedder
@@ -39,7 +43,14 @@ async def index_chunks_to_azure(
     """
     # 1. Convert to LangChain Documents
     documents = [chunk_to_document(c) for c in chunks]
-    logger.info("index_chunks_to_azure: %d chunks → %d documents", len(chunks), len(documents))
+
+    # Inject notebook_id into every document's metadata
+    if notebook_id:
+        for doc in documents:
+            doc.metadata["notebook_id"] = notebook_id
+
+    logger.info("index_chunks_to_azure: %d chunks → %d documents (notebook=%s)",
+                len(chunks), len(documents), notebook_id or "N/A")
 
     # 2. Hybrid re-chunking
     documents = hybrid_chunk(documents)
