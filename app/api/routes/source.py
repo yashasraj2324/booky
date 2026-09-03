@@ -1,57 +1,64 @@
-from fastapi import APIRouter, HTTPException, status
-from app.api.schemas.source import SourceCreate, SourceResponse
-from app.database.mongodb import sources_collection
-from datetime import datetime, timezone
+"""Sources API — upload files and add sources to notebooks.
+
+Each endpoint verifies that the notebook belongs to the current user before
+allowing access.  File uploads trigger a background parsing + indexing task.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import io
 import logging
+import os
+import shutil
+import tempfile
+from datetime import datetime, timezone
 
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, status, UploadFile, File, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
 
-from app.database.mongodb import (
-    notebooks_collection,
-    sources_collection,
-    fs,
-)
+from app.api.schemas.source import SourceCreate, SourceResponse
 from app.api.routes.components.security import get_current_user
+from app.database.mongodb import fs, notebooks_collection, sources_collection
+from app.models.users import UserResponse
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/notebooks/{notebook_id}/sources",
     tags=["Sources"],
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)],
 )
 
 
-@router.post(
-    "",
-    response_model=SourceResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-async def add_source(
-    notebook_id: str,
-    data: SourceCreate,
-):
-    # 1. Validate notebook ID
+async def _verify_notebook_ownership(
+    notebook_id: str, current_user: UserResponse
+) -> ObjectId:
+    """Validate notebook ID and verify the current user owns it."""
     if not ObjectId.is_valid(notebook_id):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid notebook ID",
-        )
+        raise HTTPException(status_code=400, detail="Invalid notebook ID")
 
-    # 2. Check notebook exists
+    obj_id = ObjectId(notebook_id)
     notebook = await notebooks_collection.find_one(
-        {"_id": ObjectId(notebook_id)}
+        {"_id": obj_id, "user_id": str(current_user.id)}
     )
-
     if notebook is None:
         raise HTTPException(
             status_code=404,
-            detail="Notebook not found",
+            detail="Notebook not found or not owned by you",
         )
+    return obj_id
 
-    # 3. Create source
+
+@router.post("", response_model=SourceResponse, status_code=status.HTTP_201_CREATED)
+async def add_source(
+    notebook_id: str,
+    data: SourceCreate,
+    current_user: UserResponse = Depends(get_current_user),
+):
+    await _verify_notebook_ownership(notebook_id, current_user)
+
     now = datetime.now(timezone.utc)
-
     source = {
         "notebook_id": ObjectId(notebook_id),
         "name": data.name,
@@ -63,10 +70,8 @@ async def add_source(
         "updated_at": now,
     }
 
-    # 4. Save source
     result = await sources_collection.insert_one(source)
 
-    # 5. Return API response
     return SourceResponse(
         id=str(result.inserted_id),
         notebook_id=notebook_id,
@@ -80,55 +85,35 @@ async def add_source(
     )
 
 
-@router.post(
-    "/upload",
-    response_model=SourceResponse,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/upload", response_model=SourceResponse, status_code=status.HTTP_201_CREATED)
 async def upload_source(
     notebook_id: str,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
+    current_user: UserResponse = Depends(get_current_user),
 ):
-    # 1. Validate notebook ID
-    if not ObjectId.is_valid(notebook_id):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid notebook ID",
-        )
+    await _verify_notebook_ownership(notebook_id, current_user)
 
-    # 2. Check notebook exists
-    notebook = await notebooks_collection.find_one(
-        {"_id": ObjectId(notebook_id)}
-    )
-
-    if notebook is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Notebook not found",
-        )
-
-    # 3. Upload file to GridFS
+    # Upload file to GridFS
     try:
         async with fs.open_upload_stream(file.filename) as upload_stream:
-            while chunk := await file.read(1024 * 1024):  # 1MB chunks
+            while chunk := await file.read(1024 * 1024):
                 await upload_stream.write(chunk)
             file_id = upload_stream._id
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to upload file: {str(e)}"
+            detail=f"Failed to upload file: {str(e)}",
         )
 
-    # 4. Create source
-    now = datetime.now(timezone.utc)
-    
-    # Extract file extension for source_type if applicable
+    # Determine source_type from file extension
     source_type = "file"
     if file.filename:
         ext = file.filename.split(".")[-1].lower()
         if ext in ["pdf", "pptx", "doc", "docx", "txt"]:
             source_type = ext
 
+    now = datetime.now(timezone.utc)
     source = {
         "notebook_id": ObjectId(notebook_id),
         "name": file.filename,
@@ -139,62 +124,17 @@ async def upload_source(
         "updated_at": now,
     }
 
-    # 5. Save source
     result = await sources_collection.insert_one(source)
 
-    # 6. Auto-parse: download from GridFS and run the parsing pipeline
-    import asyncio
-    import os
-    import tempfile
+    # Schedule background parsing + indexing
+    background_tasks.add_task(
+        _parse_in_background,
+        source_id=result.inserted_id,
+        file_id=file_id,
+        filename=file.filename or "document",
+        notebook_id=notebook_id,
+    )
 
-    logger = logging.getLogger(__name__)
-
-    async def _parse_in_background():
-        """Background task: download file from GridFS → parse → index."""
-        try:
-            # Update status
-            await sources_collection.update_one(
-                {"_id": result.inserted_id},
-                {"$set": {"status": "processing"}}
-            )
-
-            # Download from GridFS to a temp file
-            from app.database.mongodb import fs
-            import io
-
-            tmp_dir = tempfile.mkdtemp()
-            tmp_path = os.path.join(tmp_dir, file.filename or "document")
-
-            buf = io.BytesIO()
-            await fs.download_to_stream(file_id, buf)
-            with open(tmp_path, "wb") as f:
-                f.write(buf.getvalue())
-
-            # Run the parsing + indexing pipeline
-            from app.api.routes.components.prasing.prasing import run as parse_run
-            await parse_run(
-                file_path=tmp_path,
-                output_dir=tmp_dir,
-                notebook_id=notebook_id,
-            )
-
-            # Update status to ready
-            await sources_collection.update_one(
-                {"_id": result.inserted_id},
-                {"$set": {"status": "ready"}}
-            )
-            logger.info("Auto-parse complete for source: %s", result.inserted_id)
-
-        except Exception as e:
-            logger.error("Auto-parse failed for source %s: %s", result.inserted_id, e)
-            await sources_collection.update_one(
-                {"_id": result.inserted_id},
-                {"$set": {"status": "failed", "error": str(e)}}
-            )
-
-    asyncio.create_task(_parse_in_background())
-
-    # 7. Return API response
     return SourceResponse(
         id=str(result.inserted_id),
         notebook_id=notebook_id,
@@ -205,3 +145,54 @@ async def upload_source(
         created_at=now,
         updated_at=now,
     )
+
+
+async def _parse_in_background(
+    source_id: ObjectId,
+    file_id: ObjectId,
+    filename: str,
+    notebook_id: str,
+) -> None:
+    """Background task: download from GridFS → parse → index → cleanup."""
+    # Lazy import to avoid circular dependency at module load time
+    from app.api.routes.components.prasing.prasing import run as parse_run
+
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        # Update source status
+        await sources_collection.update_one(
+            {"_id": source_id},
+            {"$set": {"status": "processing"}},
+        )
+
+        # Download from GridFS to a temp file
+        tmp_path = os.path.join(tmp_dir, filename)
+        buf = io.BytesIO()
+        await fs.download_to_stream(file_id, buf)
+        with open(tmp_path, "wb") as f:
+            f.write(buf.getvalue())
+
+        # Run the parsing + indexing pipeline
+        await parse_run(
+            file_path=tmp_path,
+            output_dir=tmp_dir,
+            notebook_id=notebook_id,
+        )
+
+        # Update source status to ready
+        await sources_collection.update_one(
+            {"_id": source_id},
+            {"$set": {"status": "ready"}},
+        )
+        logger.info("Auto-parse complete for source: %s", source_id)
+
+    except Exception as e:
+        logger.error("Auto-parse failed for source %s: %s", source_id, e)
+        await sources_collection.update_one(
+            {"_id": source_id},
+            {"$set": {"status": "failed", "error": str(e)}},
+        )
+
+    finally:
+        # Always clean up temp files, even on failure
+        shutil.rmtree(tmp_dir, ignore_errors=True)

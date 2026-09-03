@@ -72,7 +72,7 @@ async def index_chunks_to_azure(
     if dry_run:
         logger.info("index_chunks_to_azure: DRY RUN — skipping upload (%d docs)", len(payload))
     else:
-        ensure_search_index()
+        await asyncio.to_thread(ensure_search_index)
         await asyncio.to_thread(_upload_to_search, payload)
         uploaded = len(payload)
 

@@ -16,6 +16,7 @@ from app.api.routes.components.security import get_current_user
 from app.api.schemas.chat import ChatRequest, ChatResponse, Citation, RetrievalHit
 from app.api.routes.components.indexing import retrieve_for_notebook
 from app.api.routes.components.indexing.answerer import generate_grounded_answer
+from app.models.users import UserResponse
 
 router = APIRouter(
     prefix="/notebooks/{notebook_id}/chat",
@@ -25,7 +26,7 @@ router = APIRouter(
 
 
 @router.post("", response_model=ChatResponse, status_code=status.HTTP_200_OK)
-async def chat_with_notebook(notebook_id: str, body: ChatRequest):
+async def chat_with_notebook(notebook_id: str, body: ChatRequest, current_user: UserResponse = Depends(get_current_user)):
     """
     Answer a question grounded in a notebook's indexed sources.
 
@@ -39,9 +40,12 @@ async def chat_with_notebook(notebook_id: str, body: ChatRequest):
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid notebook ID format")
 
-    notebook = await notebooks_collection.find_one({"_id": obj_id})
+    # Ownership check: notebook must belong to the current user
+    notebook = await notebooks_collection.find_one(
+        {"_id": obj_id, "user_id": str(current_user.id)}
+    )
     if notebook is None:
-        raise HTTPException(status_code=404, detail="Notebook not found")
+        raise HTTPException(status_code=404, detail="Notebook not found or not owned by you")
 
     # Stage 1+2: Retrieve and rerank
     results = await retrieve_for_notebook(

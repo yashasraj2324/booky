@@ -16,6 +16,7 @@ class Source(BaseModel):
 
 class Notebook(BaseModel):
     id: str = Field(alias="_id", default=None)
+    user_id: str = Field(default="", description="Owner's user ID")
     title: str
     description: Optional[str] = None
     created_at: datetime

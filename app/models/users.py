@@ -15,7 +15,10 @@ class UserLogin(BaseModel):
 
 
 class UserResponse(BaseModel):
+    id: str = Field(alias="_id", default=None)
     first_name: str
     last_name: str
     email: EmailStr
     phone_number: str
+
+    model_config = {"populate_by_name": True}
