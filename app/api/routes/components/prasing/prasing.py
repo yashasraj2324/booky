@@ -50,7 +50,7 @@ from unstructured.chunking.title import chunk_by_title
 from unstructured.documents.elements import Element, Image, Table
 from unstructured.partition.auto import partition
 
-from app.api.routes.components.indexing import index_chunks_to_azure
+from app.api.routes.components.indexing import index_chunks_to_cosmos
 
 logger = logging.getLogger(__name__)
 
@@ -608,7 +608,7 @@ async def run(
         )
     else:
         logger.info("Starting Azure embedding & indexing...")
-        result = await index_chunks_to_azure(chunks, notebook_id=notebook_id, dry_run=dry_run)
+        result = await index_chunks_to_cosmos(chunks, notebook_id=notebook_id, dry_run=dry_run)
         if dry_run:
             logger.info("Dry run result: %s", result)
         else:

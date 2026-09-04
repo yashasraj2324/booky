@@ -1,10 +1,10 @@
 """
-indexing — Modular chunking + embedding + reranking + retrieval pipeline.
+indexing — Modular pipeline: Pydantic gateway + Cosmos DB + LangGraph retrieval.
 
 Public API:
     # Indexing (ingest-time)
-    from app.api.routes.components.indexing import index_chunks_to_azure
-    result = await index_chunks_to_azure(chunks, notebook_id="...", dry_run=False)
+    from app.api.routes.components.indexing import index_chunks_to_cosmos
+    result = await index_chunks_to_cosmos(chunks, notebook_id="...", dry_run=False)
 
     # Retrieval + grounded answer (query-time)
     from app.api.routes.components.indexing import retrieve_for_notebook, generate_grounded_answer
@@ -12,34 +12,31 @@ Public API:
     answer = await generate_grounded_answer(query="...", results=results)
 """
 
-from .pipeline import index_chunks_to_azure, get_vectorstore
+from .pipeline import index_chunks_to_cosmos
 from .config import get_settings, deterministic_id
-from .image_embeddings import OpenRouterImageEmbedder
-from .reranker import make_reranker, rerank_documents
+from .gateway import GatewayClient, get_gateway
+from .reranker import rerank_documents
 from .retrieval import (
     retrieve,
     retrieve_for_notebook,
-    retrieve_for_source,
     RetrievalResult,
 )
 from .answerer import generate_grounded_answer
 
 __all__ = [
     # Indexing
-    "index_chunks_to_azure",
-    "get_vectorstore",
+    "index_chunks_to_cosmos",
     # Config
     "get_settings",
     "deterministic_id",
-    # Image embeddings
-    "OpenRouterImageEmbedder",
+    # Gateway
+    "GatewayClient",
+    "get_gateway",
     # Reranker
-    "make_reranker",
     "rerank_documents",
     # Retrieval
     "retrieve",
     "retrieve_for_notebook",
-    "retrieve_for_source",
     "RetrievalResult",
     # Answer generation
     "generate_grounded_answer",

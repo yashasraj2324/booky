@@ -1,20 +1,12 @@
-"""Retrieval pipeline — vector search in Azure AI Search + NVIDIA reranker.
+"""Retrieval pipeline — LangChain + LangGraph with Cosmos DB vector search.
 
-Syncs retrieval with the existing notebook/source model:
+Uses LangGraph to build a stateful retrieval graph:
+    1. embed_query:   Gateway embeds the user's query
+    2. vector_search:  Cosmos DB vCore vector similarity search (top_k)
+    3. rerank:         NVIDIA cross-encoder reranker via gateway (top_n)
+    4. (return results)
 
-    Notebook (MongoDB) → has many → Sources (MongoDB)
-         ↓                                      ↓
-    notebook_id                          source_doc_id
-         ↓                                      ↓
-    Azure AI Search index (booky-documents)
-    Fields: notebook_id, source_doc_id, content, content_vector, ...
-
-Flow:
-    1. User asks a question against a notebook.
-    2. ``retrieve()`` queries Azure AI Search filtered by ``notebook_id``
-       using the Azure OpenAI text embedding of the query.
-    3. The top-K candidates (e.g. 20) are passed to the NVIDIA reranker.
-    4. The reranked top-N (e.g. 5) are returned with relevance scores.
+The graph is compiled once and can be invoked with a single async call.
 """
 
 from __future__ import annotations
@@ -22,9 +14,15 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Sequence
+from typing_extensions import TypedDict
+
+from langchain_core.documents import Document
+from langgraph.graph import StateGraph, END
 
 from .config import get_settings
+from .gateway import get_gateway
+from .vector_store import vector_search
 from .reranker import rerank_documents
 
 logger = logging.getLogger(__name__)
@@ -45,95 +43,50 @@ class RetrievalResult:
     metadata: dict[str, Any]
 
 
-def get_search_client():
-    """Lazily create an Azure Search client for queries."""
-    from azure.core.credentials import AzureKeyCredential
-    from azure.search.documents import SearchClient
+# ──────────────────────────────────────────────────────────────────────────────
+# LangGraph state
+# ──────────────────────────────────────────────────────────────────────────────
 
-    s = get_settings()
-    return SearchClient(
-        s.azure_search_endpoint,
-        s.azure_search_index_name,
-        AzureKeyCredential(s.search_admin_key_str),
+class RetrievalState(TypedDict, total=False):
+    query: str
+    notebook_id: str | None
+    source_doc_id: str | None
+    top_k: int
+    top_n: int | None
+    use_reranker: bool
+    query_vector: list[float]
+    raw_results: list[dict[str, Any]]
+    documents: list[Document]
+    reranked: list[Document]
+    results: list[RetrievalResult]
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Graph node functions
+# ──────────────────────────────────────────────────────────────────────────────
+
+async def _embed_query_node(state: RetrievalState) -> dict[str, Any]:
+    """Embed the query string via the gateway."""
+    gw = get_gateway()
+    query_vector = await asyncio.to_thread(gw.embed_query, state["query"])
+    return {"query_vector": query_vector}
+
+
+async def _vector_search_node(state: RetrievalState) -> dict[str, Any]:
+    """Perform vector similarity search against Cosmos DB."""
+    raw_results = await vector_search(
+        query_vector=state["query_vector"],
+        notebook_id=state.get("notebook_id"),
+        source_doc_id=state.get("source_doc_id"),
+        top_k=state.get("top_k", 20),
     )
 
-
-def _raw_search(
-    query_text: str,
-    notebook_id: str | None = None,
-    source_doc_id: str | None = None,
-    top_k: int = 20,
-) -> list[dict[str, Any]]:
-    """Perform a vector similarity search against Azure AI Search."""
-    from langchain_openai import AzureOpenAIEmbeddings
-    from azure.search.documents.models import VectorizedQuery
-
-    s = get_settings()
-
-    embedder = AzureOpenAIEmbeddings(
-        azure_endpoint=s.azure_openai_endpoint,
-        api_key=s.openai_api_key_str,
-        azure_deployment=s.azure_openai_embedding_deployment,
-        api_version=s.azure_openai_api_version,
-    )
-    query_vector = embedder.embed_query(query_text)
-
-    client = get_search_client()
-
-    filters = []
-    if notebook_id:
-        filters.append(f"notebook_id eq '{notebook_id}'")
-    if source_doc_id:
-        filters.append(f"source_doc_id eq '{source_doc_id}'")
-    filter_expr = " and ".join(filters) if filters else None
-
-    vector_query = VectorizedQuery(
-        vector=query_vector,
-        k_nearest_neighbors=top_k,
-        fields="content_vector",
-    )
-
-    results = client.search(
-        search_text=None,
-        vector_queries=[vector_query],
-        filter=filter_expr,
-        select=[
-            "id", "content", "source_doc_id", "notebook_id",
-            "page_number", "modality", "element_type",
-            "chunk_id", "image_path", "chunk_index",
-        ],
-        top=top_k,
-    )
-
-    return [dict(r) for r in results]
-
-
-async def retrieve(
-    query: str,
-    notebook_id: str | None = None,
-    source_doc_id: str | None = None,
-    top_k: int = 20,
-    top_n: int | None = None,
-    use_reranker: bool = True,
-) -> list[RetrievalResult]:
-    """Full retrieval pipeline: vector search → rerank."""
-    raw_results = await asyncio.to_thread(
-        _raw_search, query, notebook_id, source_doc_id, top_k
-    )
-
-    if not raw_results:
-        logger.info("retrieve: no results from vector search")
-        return []
-
-    logger.info("retrieve: %d candidates from vector search", len(raw_results))
-
-    from langchain_core.documents import Document
-
+    # Convert to LangChain Documents
     documents = [
         Document(
             page_content=r.get("content", ""),
             metadata={
-                "id": r.get("id", ""),
+                "id": r.get("_id", ""),
                 "source_doc_id": r.get("source_doc_id", ""),
                 "notebook_id": r.get("notebook_id", ""),
                 "page_number": r.get("page_number", 0),
@@ -142,18 +95,25 @@ async def retrieve(
                 "chunk_id": r.get("chunk_id", ""),
                 "image_path": r.get("image_path", ""),
                 "chunk_index": r.get("chunk_index", 0),
-                "similarity_score": r.get("@search.score", 0.0),
+                "similarity_score": r.get("similarityScore", 0.0),
             },
         )
         for r in raw_results
     ]
 
-    if use_reranker:
-        reranked = await rerank_documents(query, documents)
-    else:
-        reranked = documents
+    logger.info("vector_search_node: %d candidates", len(documents))
+    return {"raw_results": raw_results, "documents": documents}
 
-    n = top_n or get_settings().rerank_top_n
+
+async def _rerank_node(state: RetrievalState) -> dict[str, Any]:
+    """Rerank documents via NVIDIA NIM through the gateway."""
+    documents = state.get("documents", [])
+    if not documents:
+        return {"reranked": [], "results": []}
+
+    reranked = await rerank_documents(state["query"], documents)
+
+    n = state.get("top_n") or get_settings().rerank_top_n
     reranked = reranked[:n]
 
     results = [
@@ -173,6 +133,112 @@ async def retrieve(
         for doc in reranked
     ]
 
+    return {"reranked": reranked, "results": results}
+
+
+def _should_rerank(state: RetrievalState) -> str:
+    """Conditional edge: skip reranker if disabled or no results."""
+    if not state.get("use_reranker", True):
+        return "skip"
+    if not state.get("documents"):
+        return "skip"
+    return "rerank"
+
+
+async def _skip_rerank_node(state: RetrievalState) -> dict[str, Any]:
+    """Skip reranking — convert documents directly to RetrievalResults."""
+    documents = state.get("documents", [])
+    n = state.get("top_n") or get_settings().rerank_top_n
+    documents = documents[:n]
+
+    results = [
+        RetrievalResult(
+            content=doc.page_content,
+            score=doc.metadata.get("similarity_score", 0.0),
+            source_doc_id=doc.metadata.get("source_doc_id", ""),
+            notebook_id=doc.metadata.get("notebook_id", ""),
+            page_number=doc.metadata.get("page_number", 0),
+            modality=doc.metadata.get("modality", "text"),
+            element_type=doc.metadata.get("element_type", "Text"),
+            chunk_id=doc.metadata.get("chunk_id", ""),
+            image_path=doc.metadata.get("image_path", ""),
+            metadata=doc.metadata,
+        )
+        for doc in documents
+    ]
+    return {"results": results}
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Build the LangGraph
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _build_retrieval_graph():
+    """Build and compile the LangGraph retrieval pipeline."""
+    graph = StateGraph(RetrievalState)
+
+    graph.add_node("embed_query", _embed_query_node)
+    graph.add_node("vector_search", _vector_search_node)
+    graph.add_node("rerank", _rerank_node)
+    graph.add_node("skip_rerank", _skip_rerank_node)
+
+    graph.set_entry_point("embed_query")
+    graph.add_edge("embed_query", "vector_search")
+    graph.add_conditional_edges(
+        "vector_search",
+        _should_rerank,
+        {
+            "rerank": "rerank",
+            "skip": "skip_rerank",
+        },
+    )
+    graph.add_edge("rerank", END)
+    graph.add_edge("skip_rerank", END)
+
+    return graph.compile()
+
+
+# Compile once, reuse on every query
+_compiled_graph = None
+
+
+def _get_graph():
+    global _compiled_graph
+    if _compiled_graph is None:
+        _compiled_graph = _build_retrieval_graph()
+    return _compiled_graph
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Public API
+# ──────────────────────────────────────────────────────────────────────────────
+
+async def retrieve(
+    query: str,
+    notebook_id: str | None = None,
+    source_doc_id: str | None = None,
+    top_k: int = 20,
+    top_n: int | None = None,
+    use_reranker: bool = True,
+) -> list[RetrievalResult]:
+    """
+    Full retrieval pipeline via LangGraph:
+        embed query → Cosmos DB vector search → NVIDIA rerank → results
+    """
+    graph = _get_graph()
+
+    initial_state: RetrievalState = {
+        "query": query,
+        "notebook_id": notebook_id,
+        "source_doc_id": source_doc_id,
+        "top_k": top_k,
+        "top_n": top_n,
+        "use_reranker": use_reranker,
+    }
+
+    final_state = await graph.ainvoke(initial_state)
+    results: list[RetrievalResult] = final_state.get("results", [])
+
     logger.info("retrieve: returning %d results", len(results))
     return results
 
@@ -184,4 +250,6 @@ async def retrieve_for_notebook(
     top_n: int | None = None,
 ) -> list[RetrievalResult]:
     """Convenience: retrieve scoped to a notebook."""
-    return await retrieve(query=query, notebook_id=notebook_id, top_k=top_k, top_n=top_n)
+    return await retrieve(
+        query=query, notebook_id=notebook_id, top_k=top_k, top_n=top_n
+    )

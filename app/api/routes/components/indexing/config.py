@@ -1,4 +1,12 @@
-"""Configuration for Azure OpenAI (embeddings + LLM), OpenRouter, NVIDIA NIM reranker, and Azure AI Search."""
+"""Configuration for the Pydantic gateway (embeddings + LLM) and Cosmos DB.
+
+All embedding models (text + image) and the chat LLM are accessed through a
+single OpenAI-compatible Pydantic gateway.  The ``model`` field in each
+request body routes to the correct provider (NVIDIA, Azure OpenAI, etc.).
+
+Vector storage uses Azure Cosmos DB for MongoDB with vCore vector search —
+the same pymongo/motor driver already used in the project.
+"""
 
 from __future__ import annotations
 
@@ -9,9 +17,9 @@ from typing import Any
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Dimension constants — must match the deployed models
-TEXT_EMBEDDING_DIM = 3072   # Azure OpenAI text-embedding-3-large
-IMAGE_EMBEDDING_DIM = 2048  # NVIDIA Llama Nemotron Embed VL 1B v2 (via OpenRouter)
+# Dimension constants — must match the models configured in the gateway
+TEXT_EMBEDDING_DIM = 3072   # text-embedding-3-large (or whatever the gateway routes to)
+IMAGE_EMBEDDING_DIM = 2048  # nvidia/llama-nemotron-embed-vl-1b-v2
 
 
 class IndexingSettings(BaseSettings):
@@ -24,62 +32,46 @@ class IndexingSettings(BaseSettings):
         case_sensitive=False,
     )
 
-    # ── Azure OpenAI (text embeddings + chat LLM) ─────────────────────
-    azure_openai_endpoint: str = Field(
-        ..., description="AOAI resource endpoint"
+    # ── Pydantic Gateway (unified entrypoint for all AI calls) ─────────
+    gateway_base_url: str = Field(
+        default="http://localhost:8000/v1",
+        description="Base URL for the Pydantic gateway (OpenAI-compatible)",
     )
-    azure_openai_api_key: SecretStr = Field(
-        ..., description="AOAI resource key"
+    gateway_api_key: SecretStr = Field(
+        default=SecretStr("dummy"),
+        description="API key for the Pydantic gateway",
     )
-    azure_openai_api_version: str = Field(
-        default="2024-02-01",
+
+    # ── Model names (passed as ``model`` field in gateway requests) ───
+    text_embedding_model: str = Field(
+        default="text-embedding-3-large",
+        description="Model name for text embeddings (routed by gateway)",
     )
-    azure_openai_embedding_deployment: str = Field(
-        ..., description="Deployment name for text-embedding-3-large"
+    image_embedding_model: str = Field(
+        default="nvidia/llama-nemotron-embed-vl-1b-v2:free",
+        description="Model name for multimodal image embeddings",
     )
-    azure_openai_chat_deployment: str = Field(
-        ..., description="Deployment name for GPT-4o (chat completions)"
+    chat_model: str = Field(
+        default="gpt-4o",
+        description="Model name for chat completions (grounded answers)",
     )
-    azure_openai_chat_temperature: float = Field(
+    rerank_model: str = Field(
+        default="nvidia/nv-rerankqa-mistral-4b-v3",
+        description="Model name for NVIDIA cross-encoder reranking",
+    )
+    chat_temperature: float = Field(
         default=0.3,
         description="Temperature for grounded answers (low = factual)",
     )
 
-    # ── OpenRouter (multimodal image embeddings) ─────────────────────
-    openrouter_api_key: SecretStr = Field(
-        ..., description="OpenRouter API key"
+    # ── Cosmos DB (vector store — uses existing MongoDB driver) ────────
+    cosmos_container_name: str = Field(
+        default="chunks",
+        description="Cosmos DB container/collection name for vector search",
     )
-    openrouter_base_url: str = Field(
-        default="https://openrouter.ai/api/v1",
-    )
-    openrouter_image_embed_model: str = Field(
-        default="nvidia/llama-nemotron-embed-vl-1b-v2:free",
-    )
-
-    # ── Azure AI Search ──────────────────────────────────────────────
-    azure_search_endpoint: str = Field(
-        ..., description="Search service endpoint"
-    )
-    azure_search_admin_key: SecretStr = Field(
-        ..., description="Search service admin key"
-    )
-    azure_search_index_name: str = Field(
-        default="booky-documents",
-    )
-
-    # ── NVIDIA NIM (reranking) ────────────────────────────────────────
-    nvidia_api_key: SecretStr = Field(
-        ..., description="NVIDIA API key (nvapi-...) for reranking NIM"
-    )
-    nvidia_rerank_base_url: str = Field(
-        default="https://integrate.api.nvidia.com/v1",
-    )
-    nvidia_rerank_model: str = Field(
-        default="nvidia/nv-rerankqa-mistral-4b-v3",
-    )
-    rerank_top_n: int = Field(
-        default=5,
-        description="Number of top documents to keep after reranking",
+    cosmos_vector_index_path: str = Field(
+        default="/content_vector",
+        description="Document path for the vector index",
     )
 
     # ── Tunables ─────────────────────────────────────────────────────
@@ -87,24 +79,15 @@ class IndexingSettings(BaseSettings):
     chunk_overlap: int = Field(default=200)
     embed_batch_size: int = Field(default=16)
     image_embed_batch_size: int = Field(default=4)
-    index_batch_size: int = Field(default=50)
+    rerank_top_n: int = Field(
+        default=5,
+        description="Number of top documents to keep after reranking",
+    )
 
     # ── Accessors ────────────────────────────────────────────────────
     @property
-    def openai_api_key_str(self) -> str:
-        return self.azure_openai_api_key.get_secret_value()
-
-    @property
-    def openrouter_api_key_str(self) -> str:
-        return self.openrouter_api_key.get_secret_value()
-
-    @property
-    def nvidia_api_key_str(self) -> str:
-        return self.nvidia_api_key.get_secret_value()
-
-    @property
-    def search_admin_key_str(self) -> str:
-        return self.azure_search_admin_key.get_secret_value()
+    def gateway_api_key_str(self) -> str:
+        return self.gateway_api_key.get_secret_value()
 
     # ── Validation ───────────────────────────────────────────────────
     @field_validator("chunk_size")
@@ -134,6 +117,6 @@ def get_settings() -> IndexingSettings:
 # ──────────────────────────────────────────────────────────────────────────────
 
 def deterministic_id(source: str, page: int, chunk_index: int, content: str) -> str:
-    """Stable hash ID for Azure Search mergeOrUpload (idempotent re-runs)."""
+    """Stable hash ID for Cosmos DB upserts (idempotent re-runs)."""
     raw = f"{source}|{page}|{chunk_index}|{content[:200]}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:64]

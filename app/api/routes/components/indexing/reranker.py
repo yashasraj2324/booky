@@ -1,10 +1,7 @@
-"""NVIDIA NIM reranker — reorders retrieved documents by relevance to a query.
+"""NVIDIA NIM reranker — routed through the Pydantic gateway.
 
-Uses the langchain_nvidia_ai_endpoints ``NVIDIARerank`` class, which calls
-the NVIDIA-hosted reranking NIM at ``https://integrate.api.nvidia.com/v1``.
-
-The default model is ``nvidia/nv-rerankqa-mistral-4b-v3`` — a cross-encoder
-based on Mistral-7B (first 16 layers) fine-tuned for QA relevance scoring.
+Calls POST /v1/ranking on the gateway, which routes to
+nvidia/nv-rerankqa-mistral-4b-v3 based on the ``model`` field.
 """
 
 from __future__ import annotations
@@ -13,47 +10,51 @@ import asyncio
 import logging
 
 from .config import get_settings
+from .gateway import get_gateway
 
 logger = logging.getLogger(__name__)
-
-
-def make_reranker():
-    """Lazily instantiate ``NVIDIARerank`` (import-safe without creds)."""
-    from langchain_nvidia_ai_endpoints import NVIDIARerank
-
-    s = get_settings()
-    return NVIDIARerank(
-        model=s.nvidia_rerank_model,
-        api_key=s.nvidia_api_key_str,
-        top_n=s.rerank_top_n,
-    )
 
 
 async def rerank_documents(
     query: str,
     documents: list,
-    reranker=None,
+    gateway=None,
 ) -> list:
     """
     Rerank LangChain ``Document`` objects by relevance to ``query``.
 
-    Returns documents reordered by relevance (most relevant first), truncated
-    to ``rerank_top_n``.  Each document's ``metadata`` gets a ``relevance_score``.
+    Extracts passage text from each Document, sends to the gateway's
+    /v1/ranking endpoint, then reorders the Documents by relevance score.
 
-    The ``compress_documents`` call is synchronous — offloaded to a thread.
+    Returns documents reordered (most relevant first), truncated to
+    ``rerank_top_n``.  Each document's ``metadata`` gets a
+    ``relevance_score`` key.
     """
-    ranker = reranker or make_reranker()
     if not documents:
         return []
 
-    reranked = await asyncio.to_thread(
-        ranker.compress_documents,
-        documents=documents,
-        query=query,
+    gw = gateway or get_gateway()
+    settings = get_settings()
+
+    # Extract passage texts
+    passages = [doc.page_content for doc in documents]
+
+    # Call the gateway's reranking endpoint (synchronous → thread)
+    rankings = await asyncio.to_thread(
+        gw.rerank, query, passages, settings.rerank_top_n
     )
+
+    # Reorder documents by ranking
+    reranked = []
+    for r in rankings:
+        idx = r["index"]
+        if 0 <= idx < len(documents):
+            doc = documents[idx]
+            doc.metadata["relevance_score"] = r["relevance_score"]
+            reranked.append(doc)
 
     logger.info(
         "rerank_documents: %d input → %d output (top_n=%d)",
-        len(documents), len(reranked), get_settings().rerank_top_n,
+        len(documents), len(reranked), settings.rerank_top_n,
     )
     return reranked

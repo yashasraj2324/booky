@@ -1,8 +1,9 @@
 """Grounded answer generation — NotebookLM-style "answer from your sources".
 
 Takes the reranked retrieval results, builds a prompt with numbered source
-passages, sends to Azure OpenAI GPT-4o, and returns an answer with inline
-[n] citations that map back to the source chunks.
+passages, sends to the Pydantic gateway's /v1/chat/completions endpoint
+(routed to GPT-4o via the model field), and returns an answer with inline
+[n] citations.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ import re
 from typing import Any
 
 from .config import get_settings
+from .gateway import get_gateway
 from .retrieval import RetrievalResult
 
 logger = logging.getLogger(__name__)
@@ -67,38 +69,13 @@ def _extract_citation_indices(answer: str) -> list[int]:
     return sorted(set(int(m) for m in matches))
 
 
-def _make_chat_client():
-    """Lazily create an Azure OpenAI chat client."""
-    from openai import AzureOpenAI
-
-    s = get_settings()
-    return AzureOpenAI(
-        azure_endpoint=s.azure_openai_endpoint,
-        api_key=s.openai_api_key_str,
-        api_version=s.azure_openai_api_version,
-    )
-
-
-def _call_gpt(messages: list[dict[str, str]], client=None) -> str:
-    """Synchronous GPT-4o call — wrapped in asyncio.to_thread by caller."""
-    s = get_settings()
-    c = client or _make_chat_client()
-    response = c.chat.completions.create(
-        model=s.azure_openai_chat_deployment,
-        messages=messages,
-        temperature=s.azure_openai_chat_temperature,
-        max_tokens=1500,
-    )
-    return response.choices[0].message.content
-
-
 async def generate_grounded_answer(
     query: str,
     results: list[RetrievalResult],
-    client=None,
+    gateway=None,
 ) -> dict[str, Any]:
     """
-    Generate a grounded answer from retrieved chunks.
+    Generate a grounded answer from retrieved chunks via the gateway.
 
     Returns dict with:
         - answer: str — LLM answer with [n] citations
@@ -112,8 +89,12 @@ async def generate_grounded_answer(
             "cited_results": [],
         }
 
+    gw = gateway or get_gateway()
     messages = _build_messages(query, results)
-    answer_text = await asyncio.to_thread(_call_gpt, messages, client)
+
+    # Gateway chat completions is synchronous → offload to thread
+    answer_text = await asyncio.to_thread(gw.chat_completions, messages)
+
     cited_indices = _extract_citation_indices(answer_text)
     cited_results = [results[i - 1] for i in cited_indices if 1 <= i <= len(results)]
 

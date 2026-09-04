@@ -1,33 +1,104 @@
-"""Async orchestrator — the single entrypoint called from prasing.py.
+"""Async orchestrator — chunk → gateway embeddings → Cosmos DB upsert.
 
-Converts Chunks → Documents → hybrid chunk → text embed → image embed →
-Azure Search upload.
+Replaces the previous Azure AI Search pipeline.  All embeddings route
+through the Pydantic gateway; vectors are stored in Cosmos DB.
 """
 
 from __future__ import annotations
 
 import asyncio
+import base64
+import io
 import logging
 from typing import Any, Sequence
 
 from .chunking import chunk_to_document, hybrid_chunk
-from .text_embeddings import embed_texts_batched, make_text_embedder
-from .image_embeddings import embed_images, make_image_embedder, OpenRouterImageEmbedder
-from .search_store import build_search_payload, ensure_search_index, _upload_to_search
+from .gateway import GatewayClient, get_gateway, embed_texts_batched
+from .vector_store import (
+    build_cosmos_documents,
+    ensure_vector_index,
+    upsert_chunks,
+)
 
 logger = logging.getLogger(__name__)
 
 
-async def index_chunks_to_azure(
+async def _embed_images_from_gridfs(
+    documents: list,
+    gateway: GatewayClient,
+) -> dict[str, list[float]]:
+    """
+    Embed image/table elements that have a ``gridfs://`` asset URI.
+
+    Retrieves image bytes from GridFS (async), then sends to the gateway
+    for multimodal embedding (synchronous HTTP → thread).
+    """
+    from langchain_core.documents import Document as _Doc
+    from .config import deterministic_id
+
+    image_docs = [
+        d for d in documents
+        if isinstance(d, _Doc)
+        and d.metadata.get("image_path", "").startswith("gridfs://")
+    ]
+    if not image_docs:
+        return {}
+
+    from app.database.mongodb import fs
+    from .config import get_settings
+
+    settings = get_settings()
+    semaphore = asyncio.Semaphore(settings.image_embed_batch_size)
+    result: dict[str, list[float]] = {}
+
+    async def _embed_one(doc: _Doc) -> tuple[str, list[float] | None]:
+        asset_uri = doc.metadata["image_path"]
+        doc_id = deterministic_id(
+            source=doc.metadata.get("source_doc_id", doc.metadata.get("source", "")),
+            page=doc.metadata.get("page_number", 0),
+            chunk_index=doc.metadata.get("chunk_index", 0),
+            content=doc.page_content,
+        )
+        try:
+            # Read from GridFS
+            file_id_str = asset_uri[len("gridfs://"):]
+            from bson import ObjectId
+            try:
+                file_id = ObjectId(file_id_str)
+            except Exception:
+                file_id = file_id_str
+
+            buf = io.BytesIO()
+            async with semaphore:
+                await fs.download_to_stream(file_id, buf)
+                # Embed via gateway (sync HTTP → thread)
+                vec = await asyncio.to_thread(
+                    gateway.embed_image_bytes, buf.getvalue()
+                )
+            logger.debug("embed_images: embedded %s (dim=%d)", asset_uri, len(vec))
+            return doc_id, vec
+        except Exception as exc:
+            logger.warning("embed_images: failed for %s: %s", asset_uri, exc)
+            return doc_id, None
+
+    tasks = [_embed_one(doc) for doc in image_docs]
+    for doc_id, vec in await asyncio.gather(*tasks):
+        if vec is not None:
+            result[doc_id] = vec
+    return result
+
+
+async def index_chunks_to_cosmos(
     chunks: Sequence[Any],
     *,
     notebook_id: str = "",
     dry_run: bool = False,
-    text_embedder=None,
-    image_embedder: OpenRouterImageEmbedder | None = None,
+    gateway: GatewayClient | None = None,
 ) -> dict[str, Any]:
     """
-    Main entrypoint.
+    Main entrypoint — convert pipeline chunks to LangChain Documents,
+    re-split oversized chunks, embed text + images via the gateway,
+    and upsert into Cosmos DB.
 
     Parameters
     ----------
@@ -35,46 +106,50 @@ async def index_chunks_to_azure(
         Iterable of ``Chunk`` objects from ``prasing.py``.
     notebook_id
         MongoDB ObjectId of the notebook these chunks belong to.
-        Stored in Azure Search so retrieval can filter by notebook.
     dry_run
-        Build chunks and embeddings but skip the index upload.
-    text_embedder / image_embedder
-        Optional injected instances (for tests).
+        Build chunks and embeddings but skip the Cosmos DB upsert.
+    gateway
+        Optional injected ``GatewayClient`` instance (for tests).
     """
+    gw = gateway or get_gateway()
+
     # 1. Convert to LangChain Documents
     documents = [chunk_to_document(c) for c in chunks]
 
-    # Inject notebook_id into every document's metadata
     if notebook_id:
         for doc in documents:
             doc.metadata["notebook_id"] = notebook_id
 
-    logger.info("index_chunks_to_azure: %d chunks → %d documents (notebook=%s)",
-                len(chunks), len(documents), notebook_id or "N/A")
+    logger.info(
+        "index_chunks_to_cosmos: %d chunks → %d documents (notebook=%s)",
+        len(chunks), len(documents), notebook_id or "N/A",
+    )
 
     # 2. Hybrid re-chunking
     documents = hybrid_chunk(documents)
 
-    # 3. Text embeddings (Azure OpenAI)
+    # 3. Text embeddings (via gateway)
     texts = [d.page_content for d in documents]
-    text_vectors = await embed_texts_batched(texts, embedder=text_embedder)
-    logger.info("index_chunks_to_azure: embedded %d text vectors", len(text_vectors))
+    text_vectors = await embed_texts_batched(texts, gateway=gw)
+    logger.info("index_chunks_to_cosmos: embedded %d text vectors", len(text_vectors))
 
-    # 4. Image embeddings (OpenRouter — NVIDIA Nemotron Embed VL)
-    image_vectors = await embed_images(documents, image_embedder=image_embedder)
-    logger.info("index_chunks_to_azure: embedded %d image vectors", len(image_vectors))
+    # 4. Image embeddings (via gateway, from GridFS)
+    image_vectors = await _embed_images_from_gridfs(documents, gw)
+    logger.info("index_chunks_to_cosmos: embedded %d image vectors", len(image_vectors))
 
-    # 5. Build upload payload
-    payload = build_search_payload(documents, text_vectors, image_vectors)
+    # 5. Build Cosmos DB documents
+    payload = build_cosmos_documents(documents, text_vectors, image_vectors)
 
-    # 6. Upload
+    # 6. Upsert
     uploaded = 0
     if dry_run:
-        logger.info("index_chunks_to_azure: DRY RUN — skipping upload (%d docs)", len(payload))
+        logger.info(
+            "index_chunks_to_cosmos: DRY RUN — skipping upsert (%d docs)",
+            len(payload),
+        )
     else:
-        await asyncio.to_thread(ensure_search_index)
-        await asyncio.to_thread(_upload_to_search, payload)
-        uploaded = len(payload)
+        await ensure_vector_index()
+        uploaded = await upsert_chunks(payload)
 
     return {
         "total_chunks": len(chunks),
@@ -84,32 +159,3 @@ async def index_chunks_to_azure(
         "uploaded": uploaded,
         "dry_run": dry_run,
     }
-
-
-def get_vectorstore():
-    """
-    Return a LangChain ``AzureSearch`` vectorstore for retrieval / RAG.
-
-    Example::
-
-        vs = get_vectorstore()
-        docs = vs.similarity_search(query="revenue by quarter", k=5)
-    """
-    from langchain_community.vectorstores import AzureSearch
-    from langchain_openai import AzureOpenAIEmbeddings
-
-    from .config import get_settings
-
-    s = get_settings()
-    embedder = AzureOpenAIEmbeddings(
-        azure_endpoint=s.azure_openai_endpoint,
-        api_key=s.openai_api_key_str,
-        azure_deployment=s.azure_openai_embedding_deployment,
-        api_version=s.azure_openai_api_version,
-    )
-    return AzureSearch(
-        azure_search_endpoint=s.azure_search_endpoint,
-        azure_search_key=s.search_admin_key_str,
-        index_name=s.azure_search_index_name,
-        embedding_function=embedder.embed_query,
-    )
