@@ -13,8 +13,7 @@ import logging
 import re
 from typing import Any
 
-from .config import get_settings
-from .gateway import get_gateway
+from .config import get_settings, get_gateway
 from .retrieval import RetrievalResult
 
 logger = logging.getLogger(__name__)

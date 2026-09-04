@@ -9,8 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from .config import get_settings
-from .gateway import get_gateway
+from .config import get_settings, get_gateway
 
 logger = logging.getLogger(__name__)
 

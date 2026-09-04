@@ -13,8 +13,7 @@ Public API:
 """
 
 from .pipeline import index_chunks_to_cosmos
-from .config import get_settings, deterministic_id
-from .gateway import GatewayClient, get_gateway
+from .config import get_settings, deterministic_id, GatewayClient, get_gateway
 from .reranker import rerank_documents
 from .retrieval import (
     retrieve,

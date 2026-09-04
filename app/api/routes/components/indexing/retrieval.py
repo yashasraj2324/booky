@@ -20,8 +20,7 @@ from typing_extensions import TypedDict
 from langchain_core.documents import Document
 from langgraph.graph import StateGraph, END
 
-from .config import get_settings
-from .gateway import get_gateway
+from .config import get_settings, get_gateway
 from .vector_store import vector_search
 from .reranker import rerank_documents
 

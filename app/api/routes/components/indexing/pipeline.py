@@ -13,7 +13,7 @@ import logging
 from typing import Any, Sequence
 
 from .chunking import chunk_to_document, hybrid_chunk
-from .gateway import GatewayClient, get_gateway, embed_texts_batched
+from .config import GatewayClient, get_gateway, embed_texts_batched
 from .vector_store import (
     build_cosmos_documents,
     ensure_vector_index,
